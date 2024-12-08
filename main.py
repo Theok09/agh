@@ -7,6 +7,7 @@ FRAGMENT_URL = "https://fragment.com/username/"
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
 }
+RESULT_FILE = "available_usernames.txt"
 
 # Function to fetch random usernames
 def get_random_usernames():
@@ -48,32 +49,33 @@ def check_username_fragment(username):
         print(f"Error checking username '{username}': {e}")
         return "Error"
 
-# Function to save results to a file
-def save_results_to_file(results, filename="results.txt"):
+# Function to save available usernames to a file
+def save_available_username(username, filename=RESULT_FILE):
     try:
-        with open(filename, "w") as file:
-            for username, status in results.items():
-                file.write(f"{username}: {status}\n")
-        print(f"✅ Results saved to '{filename}'.")
+        with open(filename, "a") as file:  # Append mode to avoid overwriting
+            file.write(f"{username}\n")
+        print(f"✅ Saved available username '{username}' to '{filename}'.")
     except Exception as e:
-        print(f"Error saving results: {e}")
+        print(f"Error saving username '{username}': {e}")
 
-# Main program execution
+# Main loop to fetch and check usernames until one is available
 def main():
-    usernames = get_random_usernames()
-    if not usernames:
-        print("⚠️ No usernames to check.")
-        return
-    
-    print(f"🟢 Starting checks for usernames: {usernames}")
-    results = {}
+    print("🔄 Starting the username checking loop...")
+    while True:
+        usernames = get_random_usernames()
+        if not usernames:
+            print("⚠️ No usernames fetched. Retrying...")
+            time.sleep(5)
+            continue
 
-    for username in usernames:
-        status = check_username_fragment(username)
-        results[username] = status
-        time.sleep(randint(1, 3))  # Random delay to avoid being blocked
-
-    save_results_to_file(results)
+        print(f"🟢 Checking usernames: {usernames}")
+        for username in usernames:
+            status = check_username_fragment(username)
+            if status == "Available":
+                save_available_username(username)
+                print("🎉 Found an available username! Stopping the loop.")
+                return  # Exit the loop when an available username is found
+            time.sleep(randint(1, 3))  # Random delay to avoid rate limits
 
 if __name__ == "__main__":
     main()
